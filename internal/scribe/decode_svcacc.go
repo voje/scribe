@@ -6,7 +6,7 @@ import (
     "golang.org/x/crypto/openpgp"
 )
 
-func decodeSvcaccJSON(filePath string, pass string) ([]byte, error) {
+func DecodeSvcaccJSON(filePath string, pass string) ([]byte, error) {
     reader, err := os.Open(filePath)
     if err != nil {
         return nil, err

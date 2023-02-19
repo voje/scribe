@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
+	"github.com/voje/stayinshape/golang/scribe/internal/scribe"
 )
 
 func main() {
+    log := logrus.New()
+
 	app := &cli.App{
         Name:  "scribe",
         Usage: "Sync google calendars, send some e-mails",
@@ -36,12 +39,17 @@ func main() {
 
         Action: func(ctx *cli.Context) error {
        		fmt.Println("Scribe starting")
-            s := scribe.NewScribe(
-                scribe.decodeSvcaccJSON(
-                    ctx.String("svcacc-json-gpg"),
-                    ctx.String("svcacc-json-gpg-pass"),
-                )
+            b, err := scribe.DecodeSvcaccJSON(
+                ctx.String("svcacc-json-gpg"),
+                ctx.String("svcacc-json-gpg-pass"),
             )
+            // log.Infof("%s\n", string(b))
+            if err != nil {
+                return err
+            }
+            s := scribe.NewScribe(log, b, ctx.String("smtp-pass"))
+            s.SyncCalendars()
+            return nil
 		},
 	}
 
