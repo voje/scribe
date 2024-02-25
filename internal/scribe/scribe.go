@@ -2,11 +2,13 @@ package scribe
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/calendar/v3"
-    "google.golang.org/api/option"
+	"google.golang.org/api/option"
 )
 
 type Scribe struct {
@@ -37,16 +39,16 @@ func NewScribe(log *logrus.Logger, svcAccJSON []byte, smtpPass string) *Scribe {
 }
 
 func (s* Scribe) initCalendarService() {
-        ctx := context.Background()
-        svc, err := calendar.NewService(ctx, option.WithCredentialsJSON(s.svcAccJSON))
-        if err != nil {
-                s.log.Fatal("Failed to create a service: %s", err)
-        }
-        s.calSvc = svc
+    ctx := context.Background()
+    svc, err := calendar.NewService(ctx, option.WithCredentialsJSON(s.svcAccJSON))
+    if err != nil {
+        s.log.Fatalf("Failed to create a service: %s", err)
+    }
+    s.calSvc = svc
 }
 
 func (s* Scribe) SyncCalendars() {
-    s.log.Info("Synchronizing events from %s into %s", s.calStern, s.calDecet)
+    s.log.Infof("Synchronizing events from %s into %s", s.calStern, s.calDecet)
 
     sgdEvents := filterSgdEvents(s.getCalEvents(s.calStern).Items)
     s.log.Info("Š+GD Šternce events:")
@@ -61,3 +63,23 @@ func (s* Scribe) SyncCalendars() {
     s.logEvents(filterSgdEvents(s.getCalEvents(s.calDecet).Items))
 }
 
+func (s* Scribe) ListEvents() {
+    tmin, _ := time.Parse("2.1.2006", "1.1.2023")
+    tmax, _ := time.Parse("2.1.2006", "1.1.2024")
+    fmt.Printf("%s [%s,%s]\n--------------------\n",
+        s.calDecet, tmin, tmax,
+    )
+    events := s.getCalEventsCustomTimeInterval(s.calDecet, tmin, tmax).Items
+    for _, e := range events {
+        if e.Summary == "Decet vaja" {
+            continue
+        }
+        t, _ := parseEventStartTime(e)
+        fmt.Printf(
+            "%s|%s %s\n",
+            t.Format("02.01.2006 15:04"),
+            e.Summary,
+            strings.Replace(e.Description, "\n", " ", -1),
+        )
+    }
+}

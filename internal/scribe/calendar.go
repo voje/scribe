@@ -1,20 +1,18 @@
 package scribe
 
 import (
-	"fmt"
-	"regexp"
-	"time"
+        "fmt"
+        "regexp"
+        "time"
 
-	log "github.com/sirupsen/logrus"
-	"google.golang.org/api/calendar/v3"
-	"google.golang.org/api/googleapi"
+        log "github.com/sirupsen/logrus"
+        "google.golang.org/api/calendar/v3"
+        "google.golang.org/api/googleapi"
 )
 
 const STAR = "⭐"
 
-func (s* Scribe) getCalEvents(cal_id string) (*calendar.Events) {
-        tmin := time.Now()
-        tmax := tmin.Add(s.timeInterval)
+func (s *Scribe) getCalEventsCustomTimeInterval(cal_id string, tmin, tmax time.Time) *calendar.Events {
         events, err := s.calSvc.Events.
                 List(cal_id).
                 ShowDeleted(true).
@@ -22,23 +20,38 @@ func (s* Scribe) getCalEvents(cal_id string) (*calendar.Events) {
                 TimeMin(tmin.Format(time.RFC3339)).
                 TimeMax(tmax.Format(time.RFC3339)).
                 OrderBy("startTime").
-                Do()
+        Do()
         if err != nil {
-                log.Fatal("Could not list events for calendar: %s. %s", cal_id, err)
+                log.Fatalf("Could not list events for calendar: %s. %s", cal_id, err)
         }
         return events
 }
 
-func (s* Scribe) logEvents(events [](*calendar.Event)) {
+func (s *Scribe) getCalEvents(cal_id string) *calendar.Events {
+        tmin := time.Now()
+        tmax := tmin.Add(s.timeInterval)
+        return s.getCalEventsCustomTimeInterval(cal_id, tmin, tmax)
+}
+
+func (s *Scribe) logEvents(events [](*calendar.Event)) {
         for _, event := range events {
                 s.log.Info(stringifyEvent(event))
         }
 }
 
+func parseEventStartTime(e *calendar.Event) (time.Time, error) {
+        ts := e.Start.DateTime
+        if ts == "" {
+                ts = e.Start.Date
+                return time.Parse("2006-01-02", ts)
+        }
+        return time.Parse(time.RFC3339, ts)
+}
+
 func stringifyEvent(event *calendar.Event) string {
         t := ""
         if event.Start.Date != "" {
-                t = event.Start.Date 
+                t = event.Start.Date
         } else {
                 t = event.Start.DateTime
         }
@@ -55,10 +68,10 @@ func filterSgdEvents(in [](*calendar.Event)) (out [](*calendar.Event)) {
         return out
 }
 
-func (s* Scribe) insertOrPatchEvent(calendarID string, event *calendar.Event) {
+func (s *Scribe) insertOrPatchEvent(calendarID string, event *calendar.Event) {
         // Add some flavor
         event.Summary = STAR + " " + event.Summary
-        
+
         // Try inserting
         // Google canendar manually deleted events stay in the system as "cancelled"
         // Copying an event that was deleted will result in an error
@@ -77,4 +90,3 @@ func (s* Scribe) insertOrPatchEvent(calendarID string, event *calendar.Event) {
                 }
         }
 }
-

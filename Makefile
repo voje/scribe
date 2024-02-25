@@ -6,5 +6,6 @@ svc-acc.json:
 # SCRIBE_SMTP_PASS="test-smtp-pass"
 run:
 	SCRIBE_SMTP_PASS="test-smtp-pass" \
-	go run cmd/scribe/scribe.go --svcacc-json-gpg ./svc-acc.json.gpg
+	SCRIBE_SVCACC_JSON_GPG="./svc-acc.json.gpg" \
+	go run cmd/scribe/scribe.go list
 

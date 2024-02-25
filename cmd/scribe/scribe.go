@@ -1,18 +1,18 @@
 package main
 
 import (
-	"fmt"
-	"os"
+    "fmt"
+    "os"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
-	"github.com/voje/stayinshape/golang/scribe/internal/scribe"
+    "github.com/sirupsen/logrus"
+    "github.com/urfave/cli/v2"
+    "github.com/voje/stayinshape/golang/scribe/internal/scribe"
 )
 
 func main() {
     log := logrus.New()
 
-	app := &cli.App{
+    app := &cli.App{
         Name:  "scribe",
         Usage: "Sync google calendars, send some e-mails",
 
@@ -37,23 +37,43 @@ func main() {
             },
         },
 
-        Action: func(ctx *cli.Context) error {
-       		fmt.Println("Scribe starting")
-            b, err := scribe.DecodeSvcaccJSON(
-                ctx.String("svcacc-json-gpg"),
-                ctx.String("svcacc-json-gpg-pass"),
-            )
-            // log.Infof("%s\n", string(b))
-            if err != nil {
-                return err
-            }
-            s := scribe.NewScribe(log, b, ctx.String("smtp-pass"))
-            s.SyncCalendars()
-            return nil
-		},
-	}
+        Commands: []*cli.Command{
+            {
+                Name: "sync",
+                Action: func(ctx *cli.Context) error {
+                    fmt.Println("Scribe starting")
+                    b, err := scribe.DecodeSvcaccJSON(
+                        ctx.String("svcacc-json-gpg"),
+                        ctx.String("svcacc-json-gpg-pass"),
+                        )
+                    if err != nil {
+                        return err
+                    }
+                    s := scribe.NewScribe(log, b, ctx.String("smtp-pass"))
+                    s.SyncCalendars()
+                    return nil
+                },
+            }, 
+            {
+                Name: "list",
+                Action: func(ctx *cli.Context) error {
+                    fmt.Println("List events")
+                    b, err := scribe.DecodeSvcaccJSON(
+                        ctx.String("svcacc-json-gpg"),
+                        ctx.String("svcacc-json-gpg-pass"),
+                        )
+                    if err != nil {
+                        return err
+                    }
+                    s := scribe.NewScribe(log, b, ctx.String("smtp-pass"))
+                    s.ListEvents()
+                    return nil
+                },
+            }, 
+        },
+    }
 
-	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
-	}
+    if err := app.Run(os.Args); err != nil {
+        log.Fatal(err)
+    }
 }
