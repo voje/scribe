@@ -33,7 +33,7 @@ func main() {
                 Name:    "smtp-pass",
                 Usage:   "Password for using Google's SMTP server",
                 EnvVars: []string{"SCRIBE_SMTP_PASS"},
-                Required: true,
+                Required: false,
             },
         },
 
