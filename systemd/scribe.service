@@ -5,3 +5,5 @@ Description=Run scribe
 Type=oneshot
 EnvironmentFile=%h/.tokens/scribe.env
 ExecStart=%h/go/bin/scribe sync
+Restart=on-failure
+RestartSec=10

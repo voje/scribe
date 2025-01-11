@@ -12,4 +12,4 @@ install:
 	systemctl --user daemon-reload
 	systemctl --user enable scribe.timer
 	-systemctl --user start scribe.service
-	systemctl --user status scribe.service
+	-systemctl --user status scribe.service

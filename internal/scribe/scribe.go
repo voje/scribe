@@ -64,8 +64,8 @@ func (s* Scribe) SyncCalendars() {
 }
 
 func (s* Scribe) ListEvents() {
-    tmin, _ := time.Parse("2.1.2006", "1.1.2023")
-    tmax, _ := time.Parse("2.1.2006", "1.1.2024")
+    tmin, _ := time.Parse("2.1.2006", "1.1.2024")
+    tmax, _ := time.Parse("2.1.2006", "1.1.2025")
     fmt.Printf("%s [%s,%s]\n--------------------\n",
         s.calDecet, tmin, tmax,
     )
